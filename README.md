@@ -1,4 +1,9 @@
 # 6.824
 MIT Distributed Systems Course 6.824
 
-### Four labs to be done
+## Lab1 MapReduce
+### Part1
+### Part2
+### Part3
+### Part4
+
