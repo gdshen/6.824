@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sort"
 )
 
 // doReduce does the job of a reduce worker: it reads the intermediate
@@ -80,7 +81,13 @@ func doReduce(
 
 	enc := json.NewEncoder(mergeFile)
 
+	var keys []string
 	for key := range kvs {
+		keys = append(keys, key)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
 		enc.Encode(KeyValue{key, reduceF(key, kvs[key])})
 	}
 	mergeFile.Close()
