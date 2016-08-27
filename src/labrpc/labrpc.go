@@ -90,8 +90,11 @@ func (e *ClientEnd) Call(svcMeth string, args interface{}, reply interface{}) bo
 	qe.Encode(args)
 	req.args = qb.Bytes()
 
+	// pass req to clientEnd channel
+	// so what happened in this channel, why arguments has been passed to the server
 	e.ch <- req
 
+	// waiting for reply
 	rep := <-req.replyCh
 	if rep.ok {
 		rb := bytes.NewBuffer(rep.reply)

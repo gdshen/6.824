@@ -1,7 +1,11 @@
 package mapreduce
 
 import (
+	"encoding/json"
+	"fmt"
 	"hash/fnv"
+	"io/ioutil"
+	"os"
 )
 
 // doMap does the job of a map worker: it reads one of the input files
@@ -14,7 +18,6 @@ func doMap(
 	nReduce int, // the number of reduce task that will be run ("R" in the paper)
 	mapF func(file string, contents string) []KeyValue,
 ) {
-	// TODO:
 	// You will need to write this function.
 	// You can find the filename for this map task's input to reduce task number
 	// r using reduceName(jobName, mapTaskNumber, r). The ihash function (given
@@ -40,6 +43,41 @@ func doMap(
 	//     err := enc.Encode(&kv)
 	//
 	// Remember to close the file after you have written all the values!
+
+	// 1. read file
+	// 2. apply user-defined function
+	// 3. use encoding/json to store data
+	// 4. write data to file
+	b, err := ioutil.ReadFile(inFile)
+	if err != nil {
+		fmt.Println("Map phrase read file failed in map tasker", mapTaskNumber)
+	}
+
+	kvs := mapF(inFile, string(b))
+	filesenc := make([]*json.Encoder, nReduce)
+	files := make([]*os.File, nReduce)
+
+	for i := range filesenc {
+		f, err := os.Create(reduceName(jobName, mapTaskNumber, i))
+		if err != nil {
+			fmt.Println("Map phrase create file failed")
+		}
+
+		enc := json.NewEncoder(f)
+		filesenc[i] = enc
+		files[i] = f
+	}
+
+	for _, v := range kvs {
+		err := filesenc[ihash(v.Key)%uint32(nReduce)].Encode(&v)
+		if err != nil {
+			fmt.Println("Map phrase hash and encoder failed")
+		}
+	}
+
+	for _, f := range files {
+		f.Close()
+	}
 }
 
 func ihash(s string) uint32 {
