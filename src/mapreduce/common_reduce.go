@@ -17,7 +17,6 @@ func doReduce(
 	nMap int, // the number of map tasks that were run ("M" in the paper)
 	reduceF func(key string, values []string) string,
 ) {
-	// TODO:
 	// You will need to write this function.
 	// You can find the intermediate file for this reduce task from map task number
 	// m using reduceName(jobName, m, reduceTaskNumber).
@@ -44,6 +43,7 @@ func doReduce(
 	// 3. group keys
 	// 4 .write to the merge file
 
+	// open all intermediate file
 	filesenc := make([]*json.Decoder, nMap)
 	files := make([]*os.File, nMap)
 	for i := range files {
@@ -57,6 +57,7 @@ func doReduce(
 		files[i] = f
 	}
 
+	// Decode json file to one variable kvs
 	kvs := make(map[string][]string)
 	for _, v := range filesenc {
 		for {
@@ -71,6 +72,7 @@ func doReduce(
 		}
 	}
 
+	// write to output file
 	mergeFile, err := os.Create(mergeName(jobName, reduceTaskNumber))
 	if err != nil {
 		fmt.Println("Reduce phrase open merge file failed")
