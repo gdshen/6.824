@@ -161,6 +161,8 @@ func TestSequentialMany(t *testing.T) {
 
 func TestBasic(t *testing.T) {
 	mr := setup()
+
+	// run two workers
 	for i := 0; i < 2; i++ {
 		go RunWorker(mr.address, port("worker"+strconv.Itoa(i)),
 			MapFunc, ReduceFunc, -1)

@@ -58,6 +58,7 @@ func Sequential(jobName string, files []string, nreduce int,
 ) (mr *Master) {
 	mr = newMaster("master")
 	go mr.run(jobName, files, nreduce, func(phase jobPhase) {
+		// this function is act as the schedule function for sequential map/reduce
 		switch phase {
 		case mapPhase:
 			for i, f := range mr.files {
@@ -69,6 +70,7 @@ func Sequential(jobName string, files []string, nreduce int,
 			}
 		}
 	}, func() {
+		// finish work
 		mr.stats = []int{len(files) + nreduce}
 	})
 	return
@@ -114,6 +116,7 @@ func (mr *Master) run(jobName string, files []string, nreduce int,
 
 	fmt.Printf("%s: Map/Reduce task completed\n", mr.address)
 
+	// doneChannel is used for the end of the whole map/reduce work
 	mr.doneChannel <- true
 }
 
@@ -129,7 +132,7 @@ func (mr *Master) Wait() {
 func (mr *Master) killWorkers() []int {
 	mr.Lock()
 	defer mr.Unlock()
-	ntasks := make([]int, 0, len(mr.workers))
+	ntasks := make([]int, 0, len(mr.workers)) // the number of tasks finished by every worker
 	for _, w := range mr.workers {
 		debug("Master: shutdown worker %s\n", w)
 		var reply ShutdownReply
