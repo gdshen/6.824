@@ -34,16 +34,23 @@ func (mr *Master) schedule(phase jobPhase) {
 		wg.Add(1)
 		go func(taskNum int, nios int, phase jobPhase) {
 			defer wg.Done()
-			worker := <-mr.registerChannel
-			var args DoTaskArgs
-			args.JobName = mr.jobName
-			//debug("panic debug: i->%v, len(file)->%v", taskNum, len(mr.files))
-			args.File = mr.files[taskNum]
-			args.Phase = phase
-			args.TaskNumber = taskNum
-			args.NumOtherPhase = nios
-			call(worker, "Worker.DoTask", &args, &struct{}{})
-			go func() { mr.registerChannel <- worker }()
+			for {
+				worker := <-mr.registerChannel
+				var args DoTaskArgs
+				args.JobName = mr.jobName
+				//debug("panic debug: i->%v, len(file)->%v", taskNum, len(mr.files))
+				args.File = mr.files[taskNum]
+				args.Phase = phase
+				args.TaskNumber = taskNum
+				args.NumOtherPhase = nios
+				ok := call(worker, "Worker.DoTask", &args, &struct{}{})
+				if ok {
+					go func() {
+						mr.registerChannel <- worker
+					}()
+					break
+				}
+			}
 		}(i, nios, phase)
 	}
 	wg.Wait()
